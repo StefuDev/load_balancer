@@ -1,0 +1,42 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build output
+*.test
+*.out
+
+# Go workspace
+/go.work
+/go.work.sum
+
+# Dev testing
+/servers/
+
+# Build directories
+/bin/
+/build/
+/dist/
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage.out
+
+# Env files
+.env
+.env.*

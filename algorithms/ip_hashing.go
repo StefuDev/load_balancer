@@ -23,7 +23,5 @@ func (m *IPHashing) GetServer(server_list []string, request *http.Request) strin
 
 	server := server_list[index]
 
-	log.Printf("%s -> %s\n", ip, server)
-
 	return server
 }

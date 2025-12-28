@@ -24,6 +24,11 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Listening on %s\n", addr)
-	log.Fatal(server.ListenAndServe())
+	if config.TLS.Enabled {
+		log.Printf("Listening on (HTTPS) https://%s\n", addr)
+		log.Fatal(server.ListenAndServeTLS(config.TLS.CertFile, config.TLS.KeyFile))
+	} else {
+		log.Printf("Listening on (HTTP) http://%s\n", addr)
+		log.Fatal(server.ListenAndServe())
+	}
 }

@@ -7,11 +7,18 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
+type TLSConfig struct {
+	Enabled  bool   `yaml:"enabled"`
+	CertFile string `yaml:"cert"`
+	KeyFile  string `yaml:"key"`
+}
+
 type Config struct {
-	IP          string   `json:"ip"`
-	Port        int      `json:"port"`
-	Server_list []string `json:"server_list"`
-	Balancer    string   `json:"balancer"`
+	IP          string    `yaml:"ip"`
+	Port        int       `yaml:"port"`
+	Server_list []string  `yaml:"server_list"`
+	Balancer    string    `yaml:"balancer"`
+	TLS         TLSConfig `yaml:"tls"`
 }
 
 func (config *Config) ReadFromYAML(path string) {

@@ -14,11 +14,13 @@ type TLSConfig struct {
 }
 
 type Config struct {
-	IP          string    `yaml:"ip"`
-	Port        int       `yaml:"port"`
-	Server_list []string  `yaml:"server_list"`
-	Balancer    string    `yaml:"balancer"`
-	TLS         TLSConfig `yaml:"tls"`
+	IP           string    `yaml:"ip"`
+	Port         int       `yaml:"port"`
+	Server_list  []string  `yaml:"server_list"`
+	Balancer     string    `yaml:"balancer"`
+	ReadTimeout  int       `yaml:"read_timeout"`
+	WriteTimeout int       `yaml:"write_timeout"`
+	TLS          TLSConfig `yaml:"tls"`
 }
 
 func (config *Config) ReadFromYAML(path string) {

@@ -24,11 +24,16 @@ example_config.yaml:
 ```yaml
 ip: 127.0.0.1
 port: 8080
+
 server_list:
   - "https://server1.example.com"
   - "https://server2.example.com"
   - "https://server3.example.com"
+
 balancer: "round_robin"
+
+read_timeout: 10
+write_timeout: 10
 
 # Optional
 tls:

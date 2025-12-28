@@ -24,9 +24,9 @@ example_config.yaml:
 ip: 127.0.0.1
 port: 8080
 server_list:
-  - "server1.example.com"
-  - "server2.example.com"
-  - "server3.example.com"
+  - "https://server1.example.com"
+  - "https://server2.example.com"
+  - "https://server3.example.com"
 balancer: "round_robin"
 ```
 

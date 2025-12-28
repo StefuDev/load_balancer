@@ -1,0 +1,6 @@
+ip: 127.0.0.1
+port: 8080
+server_list:
+  - "http://127.0.0.1:9090"
+  - "http://127.0.0.1:9080"
+balancer: "round_robin"

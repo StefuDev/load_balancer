@@ -2,7 +2,6 @@ package algorithms
 
 import (
 	"hash/fnv"
-	"log"
 	"net/http"
 	"strings"
 )

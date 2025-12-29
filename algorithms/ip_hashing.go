@@ -2,15 +2,27 @@ package algorithms
 
 import (
 	"hash/fnv"
+	"log"
+	"net"
 	"net/http"
-	"strings"
 )
 
 type IPHashing struct {
 }
 
 func (m *IPHashing) GetServer(server_list []string, request *http.Request) string {
-	ip := strings.Split(request.RemoteAddr, ":")[0]
+	ip := request.Header.Get("X-Forwarded-For")
+
+	if ip == "" {
+		host, _, err := net.SplitHostPort(request.RemoteAddr)
+
+		if err != nil {
+			log.Println(err)
+			return server_list[0]
+		}
+
+		ip = host
+	}
 
 	hasher := fnv.New32a()
 

@@ -10,7 +10,14 @@ import (
 
 func main() {
 	config := balancer.Config{}
-	config.ReadFromYAML("config.yaml")
+
+	if err := config.ReadFromYAML("config.yaml"); err != nil {
+		log.Fatalln(err)
+	}
+
+	if err := config.Validate(); err != nil {
+		log.Fatalln(err)
+	}
 
 	handler := balancer.NewRequestHandler(&config)
 

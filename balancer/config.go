@@ -1,7 +1,7 @@
 package balancer
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
@@ -14,25 +14,52 @@ type TLSConfig struct {
 }
 
 type Config struct {
-	IP           string    `yaml:"ip"`
-	Port         int       `yaml:"port"`
-	Server_list  []string  `yaml:"server_list"`
-	Balancer     string    `yaml:"balancer"`
-	ReadTimeout  int       `yaml:"read_timeout"`
-	WriteTimeout int       `yaml:"write_timeout"`
-	TLS          TLSConfig `yaml:"tls"`
+	IP              string    `yaml:"ip"`
+	Port            int       `yaml:"port"`
+	Server_list     []string  `yaml:"server_list"`
+	Balancer        string    `yaml:"balancer"`
+	ReadTimeout     int       `yaml:"read_timeout"`
+	WriteTimeout    int       `yaml:"write_timeout"`
+	UpstreamTimeout int       `yaml:"upstream_timeout"`
+	TLS             TLSConfig `yaml:"tls"`
 }
 
-func (config *Config) ReadFromYAML(path string) {
+func (config *Config) ReadFromYAML(path string) error {
 	buff, err := os.ReadFile(path)
 
 	if err != nil {
-		log.Fatalf("Error reading config file: %s\n", err)
-		return
+		return fmt.Errorf("Error reading config file: %s", err)
 	}
 
 	if err = yaml.Unmarshal(buff, config); err != nil {
-		log.Fatalf("Error reading yaml: %s\n", err)
-		return
+		return fmt.Errorf("Error reading yaml: %s", err)
 	}
+
+	return nil
+}
+
+func (config *Config) Validate() error {
+	if len(config.Server_list) == 0 {
+		return fmt.Errorf("server_list cannot be empty")
+	}
+
+	if config.IP == "" {
+		return fmt.Errorf("invalid ip")
+	}
+
+	if config.Port <= 0 {
+		return fmt.Errorf("invalid port")
+	}
+
+	if config.ReadTimeout <= 0 || config.WriteTimeout <= 0 || config.UpstreamTimeout <= 0 {
+		return fmt.Errorf("timeouts must be > 0")
+	}
+
+	if config.TLS.Enabled {
+		if config.TLS.CertFile == "" || config.TLS.KeyFile == "" {
+			return fmt.Errorf("TLS enabled but cert/key missing")
+		}
+	}
+
+	return nil
 }

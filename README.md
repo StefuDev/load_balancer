@@ -34,6 +34,7 @@ balancer: "round_robin"
 
 read_timeout: 10
 write_timeout: 10
+upstream_timeout: 10
 
 # Optional
 tls:

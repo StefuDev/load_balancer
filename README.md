@@ -5,7 +5,7 @@ This project showcases a load balancer written in Go, with simple algorithms and
 ## ✨ Features
 
 * **HTTPS support:** Built-in HTTPS support with TLS.
-* **Multiple algorithms:** This project implements the Round Robin, IP Hashing and First server as default algorithms.
+* **Multiple algorithms:** This project implements the Round Robin, IP Hashing and Random server as default algorithms.
 * **Multiple servers support:** You can add as many servers as you want.
 * **Easy to contribute:** Written in a structured, minimal way that makes it easy to add new algorithms and features.
 * **Config in YAML:** The configuration is written in YAML.
@@ -18,7 +18,7 @@ To make the configuration, you can use "example_config.yaml" as reference.
 The current algorithms are:
 -  round_robin
 -  ip_hashing
--  first
+-  random
 
 example_config.yaml:
 ```yaml
@@ -41,6 +41,11 @@ tls:
   enabled: true
   cert: "cert.pem"
   key: "key.pem"
+
+healthcheck:
+  enabled: true
+  interval: 60
+  max_concurrency: 5
 ```
 
 ### 2. Setup servers

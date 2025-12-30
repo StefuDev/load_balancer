@@ -17,3 +17,8 @@ tls:
   enabled: true
   cert: "cert.pem"
   key: "key.pem"
+
+healthcheck:
+  enabled: true
+  interval: 60
+  max_concurrency: 5

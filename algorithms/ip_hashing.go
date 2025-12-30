@@ -10,7 +10,7 @@ import (
 type IPHashing struct {
 }
 
-func (m *IPHashing) GetServer(server_list []string, request *http.Request) string {
+func (alg *IPHashing) GetServer(serverList []string, request *http.Request) string {
 	ip := request.Header.Get("X-Forwarded-For")
 
 	if ip == "" {
@@ -18,7 +18,7 @@ func (m *IPHashing) GetServer(server_list []string, request *http.Request) strin
 
 		if err != nil {
 			log.Println(err)
-			return server_list[0]
+			return serverList[0]
 		}
 
 		ip = host
@@ -30,9 +30,9 @@ func (m *IPHashing) GetServer(server_list []string, request *http.Request) strin
 
 	ipHash := hasher.Sum32()
 
-	index := ipHash % uint32(len(server_list))
+	index := ipHash % uint32(len(serverList))
 
-	server := server_list[index]
+	server := serverList[index]
 
 	return server
 }

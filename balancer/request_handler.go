@@ -1,106 +1,80 @@
 package balancer
 
 import (
-	"io"
 	"load_balancer/algorithms"
+	"load_balancer/manager"
 	"log"
-	"net"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"time"
 )
 
 type RequestHandler struct {
-	client           *http.Client
-	config           *Config
-	balancing_method BalancingMethod
+	client          *http.Client
+	config          *Config
+	balancingMethod BalancingMethod
+	serverManager   *manager.ServerManager
 }
 
 func NewRequestHandler(config *Config) *RequestHandler {
+	serverManager := &manager.ServerManager{}
+	serverManager.SetServers(config.ServerList)
+
+	if config.HealthCheck.Enabled {
+		healthCheck := manager.NewHealthCheck(
+			serverManager,
+			time.Duration(config.HealthCheck.Interval)*time.Second,
+			config.HealthCheck.MaxConcurrency)
+
+		healthCheck.StartTimer()
+		healthCheck.Update()
+	}
+
 	handler := RequestHandler{
 		client: &http.Client{
 			Timeout: time.Duration(config.UpstreamTimeout) * time.Second,
 		},
-		config: config,
+		config:        config,
+		serverManager: serverManager,
 	}
 
 	switch config.Balancer {
 	case "round_robin":
-		handler.balancing_method = &algorithms.RoundRobin{}
+		handler.balancingMethod = &algorithms.RoundRobin{}
 	case "ip_hashing":
-		handler.balancing_method = &algorithms.IPHashing{}
-	case "first":
-		handler.balancing_method = &algorithms.First{}
+		handler.balancingMethod = &algorithms.IPHashing{}
+	case "random":
+		handler.balancingMethod = &algorithms.Random{}
 	default:
-		log.Printf("Balancing method '%s' not found, using 'First' method\n", config.Balancer)
-		handler.balancing_method = &algorithms.First{}
+		log.Printf("Balancing method '%s' not found, using 'Random' method\n", config.Balancer)
+		handler.balancingMethod = &algorithms.Random{}
 	}
 
 	return &handler
 }
 
-func (handler *RequestHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	selected_server := handler.balancing_method.GetServer(handler.config.Server_list, request)
-	new_url := selected_server + request.URL.Path
+func (handler *RequestHandler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	aliveServers := handler.serverManager.GetAliveServers()
 
-	log.Printf("(%s) %s -> %s\n", request.RemoteAddr, request.URL, new_url)
-
-	server_req, err := http.NewRequest(request.Method, new_url, request.Body)
-
-	if err != nil {
-		log.Println("Error requesting to the server")
-		http.Error(response, "Internal Server Error", http.StatusInternalServerError)
+	if len(aliveServers) <= 0 {
+		log.Println("No alive servers")
+		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	server_req.Header = request.Header.Clone()
+	targetServer := handler.balancingMethod.GetServer(aliveServers, req)
+	targetURL, err := url.Parse(targetServer)
 
-	if err := addXForwardedFor(request.RemoteAddr, server_req); err != nil {
-		log.Println(err)
-		http.Error(response, "Internal Server Error", http.StatusInternalServerError)
+	if err != nil {
+		log.Println("Error parsing target url: ", err)
+		http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	server_res, err := handler.client.Do(server_req)
-	if err != nil {
-		log.Println(err)
-		http.Error(response, "Bad Gateway", http.StatusBadGateway)
-		return
-	}
+	log.Printf("(%s) %s -> %s\n", req.RemoteAddr, req.URL, targetURL)
 
-	defer server_res.Body.Close()
+	proxy := httputil.NewSingleHostReverseProxy(targetURL)
 
-	for key, values := range server_res.Header {
-		for _, value := range values {
-			response.Header().Add(key, value)
-		}
-	}
-
-	response.WriteHeader(server_res.StatusCode)
-
-	_, err = io.Copy(response, server_res.Body)
-	if err != nil {
-		log.Println("Error copying the server Body!")
-		http.Error(response, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-}
-
-func addXForwardedFor(remoteAddr string, req *http.Request) error {
-	clientIP, _, err := net.SplitHostPort(remoteAddr)
-
-	if err != nil {
-		return err
-	}
-
-	xff := req.Header.Get("X-Forwarded-For")
-
-	if xff == "" {
-		xff = clientIP
-	} else {
-		xff = xff + ", " + clientIP
-	}
-
-	req.Header.Set("X-Forwarded-For", xff)
-
-	return nil
+	proxy.ServeHTTP(rw, req)
 }

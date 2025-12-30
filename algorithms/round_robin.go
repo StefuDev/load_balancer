@@ -9,8 +9,9 @@ type RoundRobin struct {
 	counter int32
 }
 
-func (m *RoundRobin) GetServer(server_list []string, request *http.Request) string {
-	next := atomic.AddInt32(&m.counter, 1)
-	index := int(next-1) % len(server_list)
-	return server_list[index]
+func (alg *RoundRobin) GetServer(serverList []string, request *http.Request) string {
+	next := atomic.AddInt32(&alg.counter, 1)
+	index := int(next-1) % len(serverList)
+
+	return serverList[index]
 }
